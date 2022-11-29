@@ -15,8 +15,8 @@ public class GuitarTab implements Comparable<GuitarTab> {
     protected int numTicks;
     protected double fitness;
 
-    //notes
 
+    //all notes on a guitar in standard tuning
     public static final String[] BOTTOM_E_NOTE_NAMES = {"E3", "F3", "F#3", "G3", "G#3", "A3", "A#3", "B3","C4", "C#4", "D4", "D#4","E4", "F4", "F#4", "G4", "G#4", "A4", "A#4", "B4","C5", "C#5", "D5", "D#5","E5"};
     public static final String[] A_STRING_NOTE_NAMES = {"A3", "A#3", "B3","C4", "C#4", "D4", "D#4","E4", "F4", "F#4", "G4", "G#4", "A4", "A#4", "B4","C5", "C#5", "D5", "D#5","E5","F5","F#5","G5","G#5","A5"};
     public static final String[] D_STRING_NOTE_NAMES = {"D4", "D#4","E4", "F4", "F#4", "G4", "G#4", "A4", "A#4", "B4","C5", "C#5", "D5", "D#5","E5","F5","F#5","G5","G#5","A5","A#5","B5","C6","C#6","D6"};
@@ -54,20 +54,24 @@ public class GuitarTab implements Comparable<GuitarTab> {
         this.fitness = fitness;
     }
 
-
-    ///////////////////
-
+    //randomly generate a guitar tab given a list of notes
     public void generateTab(ArrayList<Note> notes){
+
         int last_tick = -1;
         ArrayList<Note> simultaneousNotes = new ArrayList<>();
-        for (Note note:notes) {
-            if(note.tick!=last_tick){
+
+        for (Note note:notes) {//loop through each note in the midi file
+            if(note.tick!=last_tick){//check you are not at the last tick in the file
+
+                //get all notes that are played at a given tick
                 simultaneousNotes = getSimultaneousNotes((int)note.tick,notes);
 
-                if(simultaneousNotes.size()==1){
+                if(simultaneousNotes.size()==1){//if there is only one note played at a given tick
                     placeSingleNote(simultaneousNotes.get(0));
-                }else{
-                    boolean[][] note_matrix = configureChord(simultaneousNotes);
+                }else{//if there is more than one note being played at a given tick
+
+                    boolean[][] note_matrix = configureChord(simultaneousNotes);//find a valid permutation of strings the notes can be played on
+
                     for(int i = 0; i<note_matrix.length;i++){
                         randomlyPlaceNote(note_matrix[i],simultaneousNotes.get(i).fullNoteName,(int)simultaneousNotes.get(i).tick);
                     }
@@ -78,8 +82,11 @@ public class GuitarTab implements Comparable<GuitarTab> {
         }
     }
 
+    //a function to return an array list of all notes played at a given tick
     public static ArrayList<Note> getSimultaneousNotes(int tick, ArrayList<Note> notes){
         ArrayList<Note> simultaneousNotes = new ArrayList<>();
+
+        //for each note in the note list. if the tick is equal to the tick parameter, add note to the simultaneous notes list
         for (Note note:notes) {
             if(note.tick==tick){
                 simultaneousNotes.add(note);
@@ -125,11 +132,14 @@ public class GuitarTab implements Comparable<GuitarTab> {
         return true;
     }
 
+    //a function to return note with the least number of string available to play on
     static int lowestTrueCount(boolean[][] noteMatrix, ArrayList<Integer> setChordList){//loop through the matrix and return the note with the lowest true count
         int lowestCountIndex = 0;
-        int lowestCount = 7; //set to 7 as any true count will be lower as there are only six strings
+        int lowestCount = 7;
         int trueCount = 0;
         int indexCounter = 0;
+
+        //loops through each array in the note matrix and counts the total number of true bool vars
         for (boolean[] stringArray:noteMatrix) {
             if((!setChordList.contains(indexCounter))){
                 trueCount = 0;
@@ -151,7 +161,8 @@ public class GuitarTab implements Comparable<GuitarTab> {
         return lowestCountIndex;
     }
 
-    static int pickRandomIndex(boolean[] stringArray){//select random index from playable notes
+    //select random index from playable notes
+    static int pickRandomIndex(boolean[] stringArray){
         int bound;
         int randomIndex;
         ArrayList<Integer> trueIndexList = new ArrayList<>();
@@ -167,6 +178,7 @@ public class GuitarTab implements Comparable<GuitarTab> {
 
         return trueIndexList.get(randomIndex);
     }
+
 
     public static boolean[][] set(boolean[][] noteMatrix,int stringIndex, int noteIndex){//string index - index of the string being set, note index - index of the note being set
         /////FUNCTION TO SET ALL NOTES BUT ONE TO TRUE OF A CERTAIN STRING VALUE // need to alter to set the string itself.
@@ -195,6 +207,7 @@ public class GuitarTab implements Comparable<GuitarTab> {
         randomlyPlaceNote(noteArray, note.fullNoteName, (int)note.tick);//place the note according to which notes are free
     }
 
+    //a function to return a boolean array representing whether a note can be played on each string
     public static boolean[] findFretLocations(String fullNoteName){
         boolean bottomE = false;
         boolean aString = false;
@@ -235,6 +248,7 @@ public class GuitarTab implements Comparable<GuitarTab> {
         return new boolean[]{bottomE, aString, dString, gString, bString, topE};
     }
 
+    //given a note, the note is randomly placed on a string where it can be played
     public void randomlyPlaceNote(boolean[] boolNotes, String note, int tick){
         Random rand = new Random();
 
@@ -258,7 +272,7 @@ public class GuitarTab implements Comparable<GuitarTab> {
         }
     }
 
-    ///////////////////
+    //print the tab in ascii form
     public void printTab(int resolution) {
         printGuitarString(this.topE,resolution);
         printGuitarString(this.bString,resolution);
@@ -268,6 +282,7 @@ public class GuitarTab implements Comparable<GuitarTab> {
         printGuitarString(this.bottomE, resolution);
     }
 
+    //function to print an individual string in ascii form
     public void printGuitarString(int[] guitarString, int resolution){
         int counter = 1;
         for(int note : guitarString){
@@ -284,7 +299,8 @@ public class GuitarTab implements Comparable<GuitarTab> {
         System.out.println("");
     }
 
-    public static boolean checkIfPlayable(boolean[] noteArray){//A function to check if there is a place for the note to be played
+    //a function to check if any values in a noteArray are true
+    public static boolean checkIfPlayable(boolean[] noteArray){
         if(noteArray==new boolean[]{false,false,false,false,false,false}){
             try {
                 throw new Exception();
@@ -295,6 +311,7 @@ public class GuitarTab implements Comparable<GuitarTab> {
         return true;
     }
 
+    //A function to randomly change a note position to another valid place to play the same note
     public boolean randomlyChangeNote(int stringIndex, int noteIndex){
         //get note name
         int fretNumber;
@@ -383,7 +400,6 @@ public class GuitarTab implements Comparable<GuitarTab> {
     }
 
     public static void main(String[] args){
-        //System.out.println(GuitarTab.checkIfInRange("G",19));
 
     }
 

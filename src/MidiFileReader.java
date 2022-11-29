@@ -20,6 +20,7 @@ public class MidiFileReader {
         this.notes = readMidiFile(path);
     }
 
+    //a function to read a midi file in to a list of notes
     public static ArrayList<Note> readMidiFile(String path) throws InvalidMidiDataException, IOException {
         //read midi file in
         Sequence sequence = MidiSystem.getSequence(new File(path));
@@ -61,10 +62,13 @@ public class MidiFileReader {
         return noteArrayList;
     }
 
+    //function that returns the number of ticks in the midi file
     public static long getTickLength(String path) throws InvalidMidiDataException, IOException {
         Sequence sequence = MidiSystem.getSequence(new File(path));
         return sequence.getTickLength();
-    };
+    }
+
+    //function to return resolution of a midi file
     public static int getResolution(String path) throws InvalidMidiDataException, IOException {
         Sequence sequence = MidiSystem.getSequence(new File(path));
         return sequence.getResolution();
